@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Числовая Гонка</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@900&family=Montserrat:wght@400;700&family=Lobster&family=Press+Start+2P&family=Caveat&display=swap" rel="stylesheet">
+    <style>
+        /* Общие стили и темы */
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #1a202c;
+            --primary-color: #4a90e2;
+            --primary-hover: #357abd;
+            --modal-bg: rgba(255, 255, 255, 0.9);
+            --modal-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --button-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1);
+            --border-color: #e2e8f0;
+        }
+
+        [data-theme="cosmos"] {
+            --bg-color: #1a202c;
+            --text-color: #edf2f7;
+            --primary-color: #00f5d4;
+            --primary-hover: #00bfa5;
+            --modal-bg: rgba(26, 32, 44, 0.95);
+            --modal-shadow: 0 10px 25px rgba(0, 245, 212, 0.2);
+            --button-shadow: 0 4px 14px 0 rgba(0, 245, 212, 0.2);
+            --border-color: #4a5568;
+        }
+
+        [data-theme="nature"] {
+            --bg-color: #f0fff4;
+            --text-color: #2f3e46;
+            --primary-color: #4caf50;
+            --primary-hover: #388e3c;
+            --modal-bg: rgba(232, 245, 233, 0.95);
+            --modal-shadow: 0 10px 25px rgba(47, 62, 70, 0.2);
+            --button-shadow: 0 4px 14px 0 rgba(76, 175, 80, 0.3);
+            --border-color: #a5d6a7;
+        }
+        
+        [data-theme="retro"] {
+            --bg-color: #fdf6e3;
+            --text-color: #654f3b;
+            --primary-color: #d35400;
+            --primary-hover: #a04000;
+            --modal-bg: rgba(253, 246, 227, 0.95);
+            --modal-shadow: 0 10px 25px rgba(101, 79, 59, 0.2);
+            --button-shadow: 0 4px 14px 0 rgba(211, 84, 0, 0.3);
+            --border-color: #bfa88b;
+        }
+
+        [data-theme="neon"] {
+            --bg-color: #0d0221;
+            --text-color: #f0f0f0;
+            --primary-color: #ff00ff;
+            --primary-hover: #c700c7;
+            --modal-bg: rgba(13, 2, 33, 0.9);
+            --modal-shadow: 0 0 20px #ff00ff, 0 0 30px #ff00ff;
+            --button-shadow: 0 0 15px #ff00ff;
+            --border-color: #ff00ff;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.5s, color 0.5s;
+            touch-action: manipulation; /* Отключает двойной тап для масштабирования */
+            -webkit-tap-highlight-color: transparent; /* Убирает подсветку при тапе */
+        }
+
+        .screen {
+            height: 100vh;
+            height: -webkit-fill-available; /* Для iOS Safari */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease-in-out;
+            width: 100%;
+        }
+        
+        #main-menu .main-title {
+             font-family: 'Roboto', sans-serif;
+             font-weight: 900;
+             letter-spacing: -0.05em;
+             text-shadow: 3px 3px 0 rgba(0,0,0,0.05);
+        }
+
+        .main-btn {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            font-weight: bold;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: var(--button-shadow);
+            transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+        }
+        .main-btn:hover {
+            transform: translateY(-3px);
+            background-color: var(--primary-hover);
+            box-shadow: 0 7px 20px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .icon-btn:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--bg-color);
+        }
+        .icon-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            z-index: 100;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: var(--modal-bg);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: var(--modal-shadow);
+            width: 90%;
+            max-width: 400px;
+            transform: scale(0.9);
+            transition: transform 0.3s ease-out;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        /* Игровое поле */
+        #game-board {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+            aspect-ratio: 9 / 16;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            border: 3px solid var(--primary-color);
+            background-color: var(--modal-bg);
+            box-shadow: var(--modal-shadow);
+        }
+        
+        .number-cell {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: var(--text-color);
+        }
+        .number-cell.found {
+            transform: scale(0) !important;
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        .number-cell:active {
+            transform: scale(0.9) !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+        .visually-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+
+    <!-- Главное меню -->
+    <div id="main-menu" class="screen p-4">
+        <div class="text-center">
+             <h1 class="main-title text-6xl md:text-8xl mb-12">
+                Числовая <span class="text-[var(--primary-color)]">Гонка</span>
+            </h1>
+        </div>
+        <div class="flex flex-col space-y-4 w-full max-w-xs">
+            <button class="main-btn" onclick="game.startGame('easy')">Легко</button>
+            <button class="main-btn" onclick="game.startGame('medium')">Средне</button>
+            <button class="main-btn" onclick="game.startGame('hard')">Сложно</button>
+            <button class="main-btn" onclick="game.startGame('expert')">Эксперт</button>
+        </div>
+        <div class="flex space-x-4 mt-12">
+            <button class="icon-btn flex justify-center items-center" onclick="ui.showModal('rules-modal')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>
+            </button>
+            <button class="icon-btn flex justify-center items-center" onclick="ui.showModal('stats-modal')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+            </button>
+            <button class="icon-btn flex justify-center items-center" onclick="ui.showModal('settings-modal')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Игровой экран -->
+    <div id="game-screen" class="screen p-2 hidden">
+        <div class="w-full max-w-[500px] flex justify-between items-center px-2 mb-2 flex-shrink-0">
+            <div>
+                <span class="text-xl font-bold">Искать:</span>
+                <span id="next-number" class="text-3xl font-bold text-[var(--primary-color)]">1</span>
+            </div>
+            <div id="timer" class="text-3xl font-bold">00:00</div>
+            <button class="icon-btn flex justify-center items-center" onclick="game.pauseGame()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-6-13.5v13.5" /></svg>
+            </button>
+        </div>
+        <div class="w-full flex-grow flex items-center justify-center overflow-hidden min-h-0">
+             <div id="game-board"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно - Пауза -->
+    <div id="pause-modal" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 class="text-4xl font-bold mb-8">Пауза</h2>
+            <div class="flex flex-col space-y-4">
+                <button class="main-btn" onclick="game.resumeGame()">Продолжить</button>
+                <button class="main-btn" onclick="game.restartGame()">Перезапустить</button>
+                <button class="main-btn" onclick="game.quitGame()">Главное меню</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно - Победа -->
+    <div id="win-modal" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 class="text-4xl font-bold mb-4 text-[var(--primary-color)]">Победа!</h2>
+            <p class="text-lg mb-1">Ваше время:</p>
+            <p id="win-time" class="text-5xl font-bold mb-4">00:00</p>
+            <p class="text-lg mb-1">Лучшее время:</p>
+            <p id="best-time" class="text-2xl font-bold mb-8">00:00</p>
+            <div class="flex flex-col space-y-4">
+                <button class="main-btn" onclick="game.restartGame()">Играть снова</button>
+                <button class="main-btn" onclick="game.quitGame()">Главное меню</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно - Правила -->
+    <div id="rules-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-4 text-center">Правила Игры</h2>
+            <p class="text-lg text-center">
+                На игровом поле в случайном порядке разбросаны числа.
+                Ваша задача - как можно быстрее найти и нажать на все числа по порядку, начиная с 1.
+            </p>
+            <button class="main-btn w-full mt-8" onclick="ui.hideAllModals()">Понятно</button>
+        </div>
+    </div>
+    
+    <!-- Модальное окно - Статистика -->
+    <div id="stats-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-6 text-center">Статистика</h2>
+            <div class="space-y-3">
+                <div class="flex justify-between p-3 rounded-lg border-2 border-[var(--border-color)]">
+                    <span class="font-bold">Легко:</span><span id="stats-easy">--:--</span>
+                </div>
+                <div class="flex justify-between p-3 rounded-lg border-2 border-[var(--border-color)]">
+                    <span class="font-bold">Средне:</span><span id="stats-medium">--:--</span>
+                </div>
+                <div class="flex justify-between p-3 rounded-lg border-2 border-[var(--border-color)]">
+                    <span class="font-bold">Сложно:</span><span id="stats-hard">--:--</span>
+                </div>
+                <div class="flex justify-between p-3 rounded-lg border-2 border-[var(--border-color)]">
+                    <span class="font-bold">Эксперт:</span><span id="stats-expert">--:--</span>
+                </div>
+            </div>
+             <button class="main-btn w-full mt-8" onclick="ui.hideAllModals()">Закрыть</button>
+        </div>
+    </div>
+    
+    <!-- Модальное окно - Настройки -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-6 text-center">Настройки Темы</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="p-4 rounded-lg text-lg font-bold border-4" style="background-color: #f0f2f5; border-color: #4a90e2; color: #1a202c;" onclick="ui.setTheme('default')">Светлая</button>
+                <button class="p-4 rounded-lg text-lg font-bold border-4" style="background-color: #1a202c; border-color: #00f5d4; color: #edf2f7;" onclick="ui.setTheme('cosmos')">Космос</button>
+                <button class="p-4 rounded-lg text-lg font-bold border-4" style="background-color: #f0fff4; border-color: #4caf50; color: #2f3e46;" onclick="ui.setTheme('nature')">Природа</button>
+                <button class="p-4 rounded-lg text-lg font-bold border-4" style="background-color: #fdf6e3; border-color: #d35400; color: #654f3b;" onclick="ui.setTheme('retro')">Ретро</button>
+                <button class="p-4 rounded-lg text-lg font-bold border-4 col-span-2" style="background-color: #0d0221; border-color: #ff00ff; color: #f0f0f0;" onclick="ui.setTheme('neon')">Неон</button>
+            </div>
+            <button class="main-btn w-full mt-8" onclick="ui.hideAllModals()">Закрыть</button>
+        </div>
+    </div>
+
+
+    <script>
+        const config = {
+            difficulties: {
+                easy: { maxNumber: 25 },
+                medium: { maxNumber: 50 },
+                hard: { maxNumber: 75 },
+                expert: { maxNumber: 100 },
+            },
+            fonts: ['Roboto', 'Montserrat', 'Lobster', 'Press Start 2P', 'Caveat'],
+        };
+
+        const state = {
+            currentNumber: 1,
+            maxNumber: 0,
+            timerInterval: null,
+            startTime: 0,
+            paused: false,
+            difficulty: 'easy',
+        };
+
+        const elements = {
+            mainMenu: document.getElementById('main-menu'),
+            gameScreen: document.getElementById('game-screen'),
+            gameBoard: document.getElementById('game-board'),
+            nextNumber: document.getElementById('next-number'),
+            timer: document.getElementById('timer'),
+            modals: {
+                pause: document.getElementById('pause-modal'),
+                win: document.getElementById('win-modal'),
+                rules: document.getElementById('rules-modal'),
+                stats: document.getElementById('stats-modal'),
+                settings: document.getElementById('settings-modal'),
+            },
+            winTime: document.getElementById('win-time'),
+            bestTime: document.getElementById('best-time'),
+        };
+
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+            return `${minutes}:${seconds}`;
+        }
+
+        const ui = {
+            showScreen(screen) {
+                elements.mainMenu.classList.add('visually-hidden');
+                elements.gameScreen.classList.add('visually-hidden');
+                
+                setTimeout(() => {
+                    elements.mainMenu.classList.add('hidden');
+                    elements.gameScreen.classList.add('hidden');
+                    screen.classList.remove('hidden');
+                    setTimeout(() => screen.classList.remove('visually-hidden'), 50);
+                }, 300);
+            },
+
+            showModal(modalId) {
+                const modal = elements.modals[modalId.replace('-modal', '')];
+                if (modalId === 'stats-modal') {
+                    this.updateStats();
+                }
+                modal.classList.add('active');
+            },
+
+            hideAllModals() {
+                Object.values(elements.modals).forEach(modal => modal.classList.remove('active'));
+            },
+
+            updateStats() {
+                const stats = storage.getStats();
+                document.getElementById('stats-easy').textContent = stats.easy ? formatTime(stats.easy) : '--:--';
+                document.getElementById('stats-medium').textContent = stats.medium ? formatTime(stats.medium) : '--:--';
+                document.getElementById('stats-hard').textContent = stats.hard ? formatTime(stats.hard) : '--:--';
+                document.getElementById('stats-expert').textContent = stats.expert ? formatTime(stats.expert) : '--:--';
+            },
+
+            setTheme(themeName) {
+                document.documentElement.setAttribute('data-theme', themeName);
+                storage.saveTheme(themeName);
+            },
+            
+            loadTheme() {
+                const savedTheme = storage.getTheme();
+                if (savedTheme) {
+                    this.setTheme(savedTheme);
+                }
+            }
+        };
+
+        const storage = {
+            getStats() {
+                return JSON.parse(localStorage.getItem('numberRaceStats')) || {};
+            },
+            saveStats(difficulty, time) {
+                const stats = this.getStats();
+                if (!stats[difficulty] || time < stats[difficulty]) {
+                    stats[difficulty] = time;
+                    localStorage.setItem('numberRaceStats', JSON.stringify(stats));
+                }
+            },
+            saveTheme(themeName) {
+                localStorage.setItem('numberRaceTheme', themeName);
+            },
+            getTheme() {
+                return localStorage.getItem('numberRaceTheme');
+            }
+        };
+
+        const game = {
+            startGame(difficulty) {
+                state.difficulty = difficulty;
+                state.maxNumber = config.difficulties[difficulty].maxNumber;
+                this.reset();
+                ui.showScreen(elements.gameScreen);
+                
+                // Задержка для корректной отрисовки поля перед генерацией чисел
+                setTimeout(() => {
+                    this.generateNumbers();
+                    this.startTimer();
+                }, 400);
+            },
+
+            reset() {
+                state.currentNumber = 1;
+                state.paused = false;
+                elements.gameBoard.innerHTML = '';
+                elements.nextNumber.textContent = '1';
+                elements.timer.textContent = '00:00';
+                clearInterval(state.timerInterval);
+            },
+            
+            restartGame() {
+                ui.hideAllModals();
+                this.startGame(state.difficulty);
+            },
+            
+            quitGame() {
+                ui.hideAllModals();
+                ui.showScreen(elements.mainMenu);
+            },
+
+            generateNumbers() {
+                const boardWidth = elements.gameBoard.clientWidth;
+                const boardHeight = elements.gameBoard.clientHeight;
+                const positions = [];
+
+                for (let i = 1; i <= state.maxNumber; i++) {
+                    const cell = document.createElement('div');
+                    cell.textContent = i;
+                    cell.dataset.number = i;
+                    cell.classList.add('number-cell');
+
+                    const { size, x, y } = this.getSafePosition(boardWidth, boardHeight, positions);
+
+                    positions.push({ x, y, size });
+
+                    cell.style.width = `${size}px`;
+                    cell.style.height = `${size}px`;
+                    cell.style.left = `${x}px`;
+                    cell.style.top = `${y}px`;
+                    
+                    const randomFont = config.fonts[Math.floor(Math.random() * config.fonts.length)];
+                    const randomRotation = Math.random() * 90 - 45;
+                    const randomScale = 0.8 + Math.random() * 0.4;
+                    
+                    cell.style.fontFamily = randomFont;
+                    cell.style.fontSize = `${size * 0.6}px`;
+                    cell.style.transform = `rotate(${randomRotation}deg) scale(${randomScale})`;
+
+                    cell.addEventListener('click', this.handleNumberClick);
+                    elements.gameBoard.appendChild(cell);
+                }
+            },
+
+            getSafePosition(boardWidth, boardHeight, existingPositions) {
+                let size, x, y, isOverlapping;
+                const maxAttempts = 150; // Увеличено кол-во попыток
+                let attempt = 0;
+
+                do {
+                    isOverlapping = false;
+                    const scaleFactor = Math.min(boardWidth, boardHeight) / 400;
+                    
+                    let sizeModifier = 1.0;
+                    if (state.difficulty === 'hard') sizeModifier = 0.88;
+                    if (state.difficulty === 'expert') sizeModifier = 0.82;
+
+                    size = (Math.random() * 30 + 35) * scaleFactor * sizeModifier;
+                    x = Math.random() * (boardWidth - size);
+                    y = Math.random() * (boardHeight - size);
+
+                    for (const pos of existingPositions) {
+                        const dx = x - pos.x;
+                        const dy = y - pos.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        // Увеличиваем делитель, чтобы разрешить более плотное размещение
+                        if (distance < (size + pos.size) / 2.1) { 
+                            isOverlapping = true;
+                            break;
+                        }
+                    }
+                    attempt++;
+                } while (isOverlapping && attempt < maxAttempts);
+
+                return { size, x, y };
+            },
+
+            handleNumberClick(e) {
+                if (state.paused) return;
+
+                const clickedNumber = parseInt(e.target.dataset.number);
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+                
+                if (clickedNumber === state.currentNumber) {
+                    e.target.classList.add('found');
+                    state.currentNumber++;
+                    
+                    if (state.currentNumber > state.maxNumber) {
+                        this.win();
+                    } else {
+                        elements.nextNumber.textContent = state.currentNumber;
+                    }
+                }
+            },
+
+            startTimer() {
+                state.startTime = Date.now();
+                state.timerInterval = setInterval(() => {
+                    if (!state.paused) {
+                        const elapsedTime = (Date.now() - state.startTime) / 1000;
+                        elements.timer.textContent = formatTime(elapsedTime);
+                    }
+                }, 200);
+            },
+            
+            stopTimer() {
+                clearInterval(state.timerInterval);
+                return (Date.now() - state.startTime) / 1000;
+            },
+
+            pauseGame() {
+                state.paused = true;
+                clearInterval(state.timerInterval);
+                ui.showModal('pause');
+            },
+
+            resumeGame() {
+                ui.hideAllModals();
+                state.paused = false;
+                const currentTimeParts = elements.timer.textContent.split(':');
+                const currentTimeInSeconds = parseInt(currentTimeParts[0]) * 60 + parseInt(currentTimeParts[1]);
+                state.startTime = Date.now() - currentTimeInSeconds * 1000;
+                this.startTimer();
+            },
+            
+            win() {
+                const finalTime = this.stopTimer();
+                storage.saveStats(state.difficulty, finalTime);
+                
+                elements.winTime.textContent = formatTime(finalTime);
+                const bestTime = storage.getStats()[state.difficulty];
+                elements.bestTime.textContent = bestTime ? formatTime(bestTime) : '--:--';
+                
+                ui.showModal('win');
+            }
+        };
+
+        // Инициализация
+        window.onload = () => {
+            ui.loadTheme();
+            Object.values(elements.modals).forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        const wasPaused = state.paused;
+                        const isPauseModal = modal.id === 'pause-modal';
+                        ui.hideAllModals();
+                        if (wasPaused && isPauseModal) {
+                           game.resumeGame();
+                        }
+                    }
+                });
+            });
+        };
+    </script>
+</body>
+</html>
+
+
