@@ -2,622 +2,1264 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Числовая Гонка</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Блок Мания</title>
+    <!-- VK Bridge -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <!-- Tone.js for sounds -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@900&family=Montserrat:wght@400;700&family=Lobster&family=Press+Start+2P&family=Caveat&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* Общие стили и темы */
         :root {
-            --bg-color: #f0f2f5;
-            --text-color: #1a202c;
-            --primary-color: #4a90e2;
-            --primary-hover: #357abd;
-            --modal-bg: rgba(255, 255, 255, 0.9);
-            --modal-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            --button-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1);
-            --border-color: #e2e8f0;
+            --primary-bg-start: #1e3a8a;
+            --primary-bg-end: #3b82f6;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --accent-color: #fbbf24;
+            --danger-color: #ef4444;
+            
+            --font-main: 'Montserrat', sans-serif;
         }
 
-        [data-theme="cosmos"] {
-            --bg-color: #1a202c;
-            --text-color: #edf2f7;
-            --primary-color: #00f5d4;
-            --primary-hover: #00bfa5;
-            --modal-bg: rgba(26, 32, 44, 0.95);
-            --modal-shadow: 0 10px 25px rgba(0, 245, 212, 0.2);
-            --button-shadow: 0 4px 14px 0 rgba(0, 245, 212, 0.2);
-            --border-color: #4a5568;
+        /* --- НОВЫЕ ЦВЕТА БЛОКОВ --- */
+        :root {
+            --c1: #3b82f6; /* Blue */
+            --c2: #ef4444; /* Red */
+            --c3: #22c55e; /* Green */
+            --c4: #f97316; /* Orange */
+            --c5: #a855f7; /* Purple */
+            --c6: #eab308; /* Yellow */
+            --c7: #06b6d4; /* Cyan */
+            --c8: #64748b; /* Slate */
+            --c9: #ec4899; /* Pink */
         }
 
-        [data-theme="nature"] {
-            --bg-color: #f0fff4;
-            --text-color: #2f3e46;
-            --primary-color: #4caf50;
-            --primary-hover: #388e3c;
-            --modal-bg: rgba(232, 245, 233, 0.95);
-            --modal-shadow: 0 10px 25px rgba(47, 62, 70, 0.2);
-            --button-shadow: 0 4px 14px 0 rgba(76, 175, 80, 0.3);
-            --border-color: #a5d6a7;
-        }
-        
-        [data-theme="retro"] {
-            --bg-color: #fdf6e3;
-            --text-color: #654f3b;
-            --primary-color: #d35400;
-            --primary-hover: #a04000;
-            --modal-bg: rgba(253, 246, 227, 0.95);
-            --modal-shadow: 0 10px 25px rgba(101, 79, 59, 0.2);
-            --button-shadow: 0 4px 14px 0 rgba(211, 84, 0, 0.3);
-            --border-color: #bfa88b;
+        *, *::before, *::after {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        [data-theme="neon"] {
-            --bg-color: #0d0221;
-            --text-color: #f0f0f0;
-            --primary-color: #ff00ff;
-            --primary-hover: #c700c7;
-            --modal-bg: rgba(13, 2, 33, 0.9);
-            --modal-shadow: 0 0 20px #ff00ff, 0 0 30px #ff00ff;
-            --button-shadow: 0 0 15px #ff00ff;
-            --border-color: #ff00ff;
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
         }
-        
+
         body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.5s, color 0.5s;
-            touch-action: manipulation; /* Отключает двойной тап для масштабирования */
-            -webkit-tap-highlight-color: transparent; /* Убирает подсветку при тапе */
-        }
-
-        .screen {
-            height: 100vh;
-            height: -webkit-fill-available; /* Для iOS Safari */
+            font-family: var(--font-main);
+            background: linear-gradient(135deg, var(--primary-bg-start), var(--primary-bg-end));
+            color: var(--text-primary);
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.5s ease-in-out;
-            width: 100%;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
-        
-        #main-menu .main-title {
-             font-family: 'Roboto', sans-serif;
-             font-weight: 900;
-             letter-spacing: -0.05em;
-             text-shadow: 3px 3px 0 rgba(0,0,0,0.05);
+        body.dragging {
+             cursor: grabbing;
         }
 
-        .main-btn {
-            background-color: var(--primary-color);
-            color: var(--bg-color);
-            font-weight: bold;
-            padding: 1rem 2rem;
-            border-radius: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: var(--button-shadow);
-            transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+        #app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            max-height: 800px;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            position: relative;
         }
-        .main-btn:hover {
+
+        /* --- ОБЩИЕ КОМПОНЕНТЫ --- */
+        .btn {
+            font-family: var(--font-main);
+            position: relative;
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            color: var(--text-primary);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover:not(:disabled) {
             transform: translateY(-3px);
-            background-color: var(--primary-hover);
-            box-shadow: 0 7px 20px 0 rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: var(--accent-color);
+            color: var(--primary-bg-start);
+            border: none;
+            font-weight: 800;
+        }
+        
+        .ad-label {
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            background-color: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 6px;
         }
 
         .icon-btn {
-            background: transparent;
-            border: 2px solid var(--border-color);
-            color: var(--text-color);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
         }
         .icon-btn:hover {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: var(--bg-color);
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
         }
         .icon-btn svg {
             width: 24px;
             height: 24px;
         }
 
-        .modal-overlay {
+
+        /* --- ГЛАВНОЕ МЕНЮ --- */
+        #main-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .game-title {
+            font-size: 3.8rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .main-menu-buttons {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bottom-nav {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+
+        /* --- ЭКРАН ИГРЫ --- */
+        #game-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+            background: var(--glass-bg);
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .score-box {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .score-box .label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .score-box .score-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        #pause-btn {
+            background: transparent;
+            border: none;
+            width: 44px;
+            height: 44px;
+            color: var(--text-primary);
+            flex-shrink: 0;
+        }
+        #pause-btn svg { width: 30px; height: 30px; }
+        
+        /* --- ИГРОВОЕ ПОЛЕ --- */
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: var(--glass-bg);
+            border-radius: 16px;
+            gap: 4px;
+            padding: 4px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .grid-cell {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        
+        .grid-cell.filled-cell {
+            transition: transform 0.3s ease-out, box-shadow 0.3s;
+        }
+        
+        .grid-cell.clearing {
+            transform: scale(0);
+            border-radius: 50%;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .grid-cell.preview {
+            background-color: rgba(255, 255, 255, 0.3) !important;
+            border-radius: 6px;
+        }
+        
+        .bomb-cell {
+            position: relative;
+            background-color: #1a1a1a !important;
+            animation: bomb-pulse 1.2s infinite;
+        }
+        .bomb-timer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 900;
+            font-size: calc(min(4vw, 20px));
+            text-shadow: 0 0 5px var(--danger-color);
+        }
+        @keyframes bomb-pulse {
+            0% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 10px 5px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0); }
+        }
+
+        /* --- ВРЕМЕННАЯ ШКАЛА --- */
+        #time-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 5px;
+            margin: 15px 0;
+            display: none;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+        #time-bar {
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            border-radius: 5px;
+            transition: width 0.2s linear;
+        }
+        
+        /* --- ОБЛАСТЬ БЛОКОВ --- */
+        #pieces-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: auto;
+            padding: 20px 0 10px 0;
+            flex-grow: 1;
+        }
+
+        .piece {
+            display: grid;
+            cursor: grab;
+            transition: transform 0.2s, opacity 0.2s;
+            touch-action: none;
+        }
+        .piece-cell {
+            width: 18px;
+            height: 18px;
+        }
+        .piece-cell.filled {
+            border-radius: 4px;
+        }
+        .piece.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        /* --- ПЛАВАЮЩИЙ БЛОК --- */
+        #floating-piece-container {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-            z-index: 100;
+            width: 0;
+            height: 0;
+            z-index: 2000;
+            pointer-events: none;
         }
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        .modal-content {
-            background-color: var(--modal-bg);
-            padding: 2rem;
-            border-radius: 1.5rem;
-            box-shadow: var(--modal-shadow);
-            width: 90%;
-            max-width: 400px;
-            transform: scale(0.9);
-            transition: transform 0.3s ease-out;
-        }
-        .modal-overlay.active .modal-content {
-            transform: scale(1);
-        }
-
-        /* Игровое поле */
-        #game-board {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            max-width: 500px;
-            aspect-ratio: 9 / 16;
-            overflow: hidden;
-            border-radius: 1.5rem;
-            border: 3px solid var(--primary-color);
-            background-color: var(--modal-bg);
-            box-shadow: var(--modal-shadow);
+        #floating-piece-container .piece {
+            position: absolute;
+            transform-origin: center center;
+            will-change: transform;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+            transition: transform 0.1s ease-out;
         }
         
-        .number-cell {
-            position: absolute;
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(10, 20, 40, 0.5);
+            display: none;
+            justify-content: center; align-items: center;
+            padding: 20px; z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            width: 100%; max-width: 380px;
+            text-align: center; display: flex;
+            flex-direction: column; gap: 15px;
+            background: linear-gradient(135deg, var(--primary-bg-end), var(--primary-bg-start));
+            border-radius: 20px; padding: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.3);
+        }
+        .modal-title { font-size: 2rem; font-weight: 800; margin-bottom: 0; }
+        .modal-subtitle { font-size: 1rem; color: var(--text-secondary); margin-top: -10px; margin-bottom: 10px; }
+        
+        /* Стили для настроек */
+        .settings-row {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            padding: 10px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .toggle-switch {
+            appearance: none;
+            width: 50px;
+            height: 28px;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 14px;
+            position: relative;
             cursor: pointer;
-            user-select: none;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            color: var(--text-color);
+            transition: background-color 0.3s;
         }
-        .number-cell.found {
-            transform: scale(0) !important;
-            opacity: 0;
-            transition: transform 0.3s, opacity 0.3s;
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: white;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
-        .number-cell:active {
-            transform: scale(0.9) !important;
+        .toggle-switch:checked {
+            background-color: var(--accent-color);
+        }
+        .toggle-switch:checked::before {
+            transform: translateX(22px);
         }
 
-        .hidden {
-            display: none;
-        }
-        .visually-hidden {
-            opacity: 0;
-            pointer-events: none;
+        /* --- АДАПТИВНОСТЬ --- */
+        @media (max-height: 720px) {
+            #app-container { padding: 15px; max-height: 95vh; }
+            .top-bar { margin-bottom: 10px; }
+            #pieces-container { padding: 10px 0; }
+            .piece-cell { width: 16px; height: 16px; }
+            .btn { padding: 14px 18px; font-size: 1rem; }
+            .game-title { font-size: 3rem; }
         }
     </style>
 </head>
-<body class="overflow-hidden">
+<body>
+    
+    <audio id="bg-music" loop src="music.mp3"></audio>
 
-    <!-- Главное меню -->
-    <div id="main-menu" class="screen p-4">
-        <div class="text-center">
-             <h1 class="main-title text-6xl md:text-8xl mb-12">
-                Числовая <span class="text-[var(--primary-color)]">Гонка</span>
-            </h1>
-        </div>
-        <div class="flex flex-col space-y-4 w-full max-w-xs">
-            <button class="main-btn" onclick="game.startGame('easy')">Легко</button>
-            <button class="main-btn" onclick="game.startGame('medium')">Средне</button>
-            <button class="main-btn" onclick="game.startGame('hard')">Сложно</button>
-            <button class="main-btn" onclick="game.startGame('expert')">Эксперт</button>
-        </div>
-        <div class="flex space-x-4 mt-12">
-            <button class="icon-btn flex justify-center items-center" onclick="ui.showModal('rules-modal')">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>
-            </button>
-            <button class="icon-btn flex justify-center items-center" onclick="ui.showModal('stats-modal')">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
-            </button>
-            <button class="icon-btn flex justify-center items-center" onclick="ui.showModal('settings-modal')">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            </button>
-        </div>
-    </div>
+    <div id="app-container">
 
-    <!-- Игровой экран -->
-    <div id="game-screen" class="screen p-2 hidden">
-        <div class="w-full max-w-[500px] flex justify-between items-center px-2 mb-2 flex-shrink-0">
-            <div>
-                <span class="text-xl font-bold">Искать:</span>
-                <span id="next-number" class="text-3xl font-bold text-[var(--primary-color)]">1</span>
+        <!-- ГЛАВНОЕ МЕНЮ -->
+        <div id="main-menu">
+            <h1 class="game-title">Блок Мания</h1>
+            <div class="main-menu-buttons">
+                <button class="btn" data-mode="classic">Классика</button>
+                <button class="btn" data-mode="time">Гонка на время</button>
+                <button class="btn" data-mode="bomb">Минное поле</button>
+                <button class="btn" data-mode="expanded">Эксперт</button>
             </div>
-            <div id="timer" class="text-3xl font-bold">00:00</div>
-            <button class="icon-btn flex justify-center items-center" onclick="game.pauseGame()">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-6-13.5v13.5" /></svg>
-            </button>
-        </div>
-        <div class="w-full flex-grow flex items-center justify-center overflow-hidden min-h-0">
-             <div id="game-board"></div>
-        </div>
-    </div>
-
-    <!-- Модальное окно - Пауза -->
-    <div id="pause-modal" class="modal-overlay">
-        <div class="modal-content text-center">
-            <h2 class="text-4xl font-bold mb-8">Пауза</h2>
-            <div class="flex flex-col space-y-4">
-                <button class="main-btn" onclick="game.resumeGame()">Продолжить</button>
-                <button class="main-btn" onclick="game.restartGame()">Перезапустить</button>
-                <button class="main-btn" onclick="game.quitGame()">Главное меню</button>
+            <div class="bottom-nav">
+                <button id="rules-btn" class="icon-btn" title="Правила">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </button>
+                <button id="stats-btn" class="icon-btn" title="Статистика">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20V16"></path></svg>
+                </button>
+                <button id="settings-btn" class="icon-btn" title="Настройки">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Модальное окно - Победа -->
-    <div id="win-modal" class="modal-overlay">
-        <div class="modal-content text-center">
-            <h2 class="text-4xl font-bold mb-4 text-[var(--primary-color)]">Победа!</h2>
-            <p class="text-lg mb-1">Ваше время:</p>
-            <p id="win-time" class="text-5xl font-bold mb-4">00:00</p>
-            <p class="text-lg mb-1">Лучшее время:</p>
-            <p id="best-time" class="text-2xl font-bold mb-8">00:00</p>
-            <div class="flex flex-col space-y-4">
-                <button class="main-btn" onclick="game.restartGame()">Играть снова</button>
-                <button class="main-btn" onclick="game.quitGame()">Главное меню</button>
+        <!-- ИГРОВОЙ ЭКРАН -->
+        <div id="game-screen">
+            <div class="top-bar">
+                <div class="score-box">
+                    <div class="label">Рекорд</div>
+                    <div id="highscore" class="score-value">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="label">Счет</div>
+                    <div id="score" class="score-value">0</div>
+                </div>
+                <button id="pause-btn" class="icon-btn" title="Пауза">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="4" x2="6" y2="20"></line><line x1="18" y1="4" x2="18" y2="20"></line></svg>
+                </button>
             </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно - Правила -->
-    <div id="rules-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 class="text-3xl font-bold mb-4 text-center">Правила Игры</h2>
-            <p class="text-lg text-center">
-                На игровом поле в случайном порядке разбросаны числа.
-                Ваша задача - как можно быстрее найти и нажать на все числа по порядку, начиная с 1.
-            </p>
-            <button class="main-btn w-full mt-8" onclick="ui.hideAllModals()">Понятно</button>
+            
+            <div id="time-bar-container"><div id="time-bar"></div></div>
+            <div id="game-grid"></div>
+            <div id="pieces-container"></div>
         </div>
     </div>
     
-    <!-- Модальное окно - Статистика -->
-    <div id="stats-modal" class="modal-overlay">
+    <!-- КОНТЕЙНЕР ДЛЯ ПЕРЕТАСКИВАНИЯ -->
+    <div id="floating-piece-container"></div>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    <div id="pause-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-3xl font-bold mb-6 text-center">Статистика</h2>
-            <div class="space-y-3">
-                <div class="flex justify-between p-3 rounded-lg border-2 border-[var(--border-color)]">
-                    <span class="font-bold">Легко:</span><span id="stats-easy">--:--</span>
-                </div>
-                <div class="flex justify-between p-3 rounded-lg border-2 border-[var(--border-color)]">
-                    <span class="font-bold">Средне:</span><span id="stats-medium">--:--</span>
-                </div>
-                <div class="flex justify-between p-3 rounded-lg border-2 border-[var(--border-color)]">
-                    <span class="font-bold">Сложно:</span><span id="stats-hard">--:--</span>
-                </div>
-                <div class="flex justify-between p-3 rounded-lg border-2 border-[var(--border-color)]">
-                    <span class="font-bold">Эксперт:</span><span id="stats-expert">--:--</span>
-                </div>
-            </div>
-             <button class="main-btn w-full mt-8" onclick="ui.hideAllModals()">Закрыть</button>
+            <h2 class="modal-title">Пауза</h2>
+            <button class="btn btn-primary" data-action="resume">Продолжить</button>
+            <button class="btn" data-action="quit">Выйти в меню</button>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="game-over-title">Игра окончена!</h2>
+            <p class="modal-subtitle" id="game-over-reason"></p>
+            <p>Ваш счет: <strong id="final-score" style="font-size: 1.5em; color: var(--accent-color)">0</strong></p>
+            <button class="btn btn-primary" data-action="restart">Начать заново</button>
+            <button class="btn" data-action="quit">Выйти в меню</button>
         </div>
     </div>
     
-    <!-- Модальное окно - Настройки -->
-    <div id="settings-modal" class="modal-overlay">
+    <div id="revive-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-3xl font-bold mb-6 text-center">Настройки Темы</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <button class="p-4 rounded-lg text-lg font-bold border-4" style="background-color: #f0f2f5; border-color: #4a90e2; color: #1a202c;" onclick="ui.setTheme('default')">Светлая</button>
-                <button class="p-4 rounded-lg text-lg font-bold border-4" style="background-color: #1a202c; border-color: #00f5d4; color: #edf2f7;" onclick="ui.setTheme('cosmos')">Космос</button>
-                <button class="p-4 rounded-lg text-lg font-bold border-4" style="background-color: #f0fff4; border-color: #4caf50; color: #2f3e46;" onclick="ui.setTheme('nature')">Природа</button>
-                <button class="p-4 rounded-lg text-lg font-bold border-4" style="background-color: #fdf6e3; border-color: #d35400; color: #654f3b;" onclick="ui.setTheme('retro')">Ретро</button>
-                <button class="p-4 rounded-lg text-lg font-bold border-4 col-span-2" style="background-color: #0d0221; border-color: #ff00ff; color: #f0f0f0;" onclick="ui.setTheme('neon')">Неон</button>
-            </div>
-            <button class="main-btn w-full mt-8" onclick="ui.hideAllModals()">Закрыть</button>
+            <h2 class="modal-title">Второй шанс?</h2>
+            <p class="modal-subtitle">Очистить часть поля и продолжить игру?</p>
+            <button class="btn btn-primary" data-action="revive">
+                Продолжить
+                <span class="ad-label">AD</span>
+            </button>
+            <button class="btn" data-action="end-game-confirm">Завершить игру</button>
         </div>
     </div>
 
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+             <h2 class="modal-title">Настройки</h2>
+             <div class="settings-row">
+                <span>Музыка</span>
+                <input type="checkbox" id="music-toggle" class="toggle-switch" checked>
+             </div>
+             <div class="settings-row">
+                <span>Звуковые эффекты</span>
+                <input type="checkbox" id="sound-toggle" class="toggle-switch" checked>
+             </div>
+             <button class="btn btn-primary" data-action="close">Закрыть</button>
+        </div>
+    </div>
 
-    <script>
-        const config = {
-            difficulties: {
-                easy: { maxNumber: 25 },
-                medium: { maxNumber: 50 },
-                hard: { maxNumber: 75 },
-                expert: { maxNumber: 100 },
-            },
-            fonts: ['Roboto', 'Montserrat', 'Lobster', 'Press Start 2P', 'Caveat'],
-        };
+    <!-- Модалки для правил и статистики остаются прежними по структуре, но получат новый стиль -->
+    <div id="stats-modal" class="modal"><div class="modal-content" id="stats-content"></div></div>
+    <div id="rules-modal" class="modal"><div class="modal-content" id="rules-content"></div></div>
 
-        const state = {
-            currentNumber: 1,
-            maxNumber: 0,
-            timerInterval: null,
-            startTime: 0,
-            paused: false,
-            difficulty: 'easy',
-        };
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // --- AUDIO MANAGER V6 (RELIABLE CLICK-TO-START) ---
+    const audioManager = {
+        isReady: false,
+        wasMusicPlaying: false,
+        bgMusic: document.getElementById('bg-music'),
+        synths: {},
+        settings: { sfx: true, music: true },
+        
+        async init() {
+            if (this.isReady || typeof Tone === 'undefined') return;
+            // This MUST be triggered by a user interaction.
+            await Tone.start(); 
+            
+            this.bgMusic.volume = 0.3;
 
-        const elements = {
-            mainMenu: document.getElementById('main-menu'),
-            gameScreen: document.getElementById('game-screen'),
-            gameBoard: document.getElementById('game-board'),
-            nextNumber: document.getElementById('next-number'),
-            timer: document.getElementById('timer'),
-            modals: {
-                pause: document.getElementById('pause-modal'),
-                win: document.getElementById('win-modal'),
-                rules: document.getElementById('rules-modal'),
-                stats: document.getElementById('stats-modal'),
-                settings: document.getElementById('settings-modal'),
-            },
-            winTime: document.getElementById('win-time'),
-            bestTime: document.getElementById('best-time'),
-        };
+            // Define synths
+            const reverb = new Tone.Reverb(0.5).toDestination();
+            reverb.wet.value = 0.4;
+            this.synths.tap = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 6, envelope: { attack: 0.001, decay: 0.2, sustain: 0.01 } }).toDestination();
+            this.synths.tap.volume.value = -12;
+            this.synths.place = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).connect(reverb);
+            this.synths.place.volume.value = -8;
+            this.synths.clear = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.4 } }).connect(reverb);
+            this.synths.clear.volume.value = -6;
+            this.synths.gameOver = new Tone.AMSynth({ harmonicity: 1.5, envelope: { attack: 0.02, decay: 0.8, sustain: 0, release: 0.5 } }).toDestination();
+            this.synths.gameOver.volume.value = -5;
 
-        function formatTime(totalSeconds) {
-            const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-            const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
-            return `${minutes}:${seconds}`;
+            this.isReady = true;
+            this.updateMusicState();
+        },
+        
+        play(type, note, duration, time = '+0') {
+            if (!this.isReady || !this.settings.sfx || !this.synths[type]) return;
+            try {
+                this.synths[type].triggerAttackRelease(note, duration, Tone.now() + time);
+            } catch (e) { console.warn("Sound play error", e); }
+        },
+        
+        tap() { this.play('tap', 'C4', '8n'); },
+        place() { this.play('place', 'C4', '16n'); },
+        clear() {
+            const notes = ['C5', 'E5', 'G5', 'C6'];
+            notes.forEach((note, i) => this.play('clear', note, '8n', `+${i * 0.09}`));
+        },
+        gameOver() { this.play('gameOver', 'G2', '2n'); },
+        
+        updateMusicState() {
+            if (this.settings.music && this.isReady) {
+                this.bgMusic.play().catch(e => {});
+            } else {
+                this.bgMusic.pause();
+            }
+        },
+        
+        handleVisibilityChange(isVisible) {
+            if (isVisible) {
+                // FIX 2: "Силовое" возобновление.
+                // Сначала будим аудио-контекст, если он "уснул".
+                if (this.isReady && Tone.context.state !== 'running') {
+                    Tone.context.resume().catch(e => console.warn("Context resume failed", e));
+                }
+                
+                // Всегда пытаемся запустить музыку, если она играла до рекламы.
+                if (this.wasMusicPlaying && this.settings.music && this.isReady) {
+                    // Даем контексту 100мс на "пробуждение"
+                    setTimeout(() => {
+                        this.bgMusic.play().catch(e => {});
+                    }, 100); 
+                }
+                this.wasMusicPlaying = false;
+            } else {
+                if (!this.bgMusic.paused) {
+                    this.wasMusicPlaying = true;
+                    this.bgMusic.pause();
+                }
+            }
+        },
+
+        // This function is still useful as a redundant check
+        refreshStateAfterAd() {
+            if (!this.isReady) return;
+            if (Tone.context.state !== 'running') {
+                Tone.context.resume().then(() => {
+                    this.updateMusicState();
+                });
+            } else {
+                this.updateMusicState();
+            }
         }
+    };
+    
+    // --- NEW BLOCK STYLE FUNCTION ---
+    function getBlockStyle(color) {
+        return `
+            background-color: ${color};
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.08) 75%, transparent 75%, transparent);
+            background-size: 10px 10px;
+            box-shadow: inset 1px 1px 1px 0 rgba(255,255,255,0.3), 
+                        inset -1px -1px 1px 0 rgba(0,0,0,0.4),
+                        0 2px 3px 0 rgba(0,0,0,0.2);
+        `;
+    }
 
-        const ui = {
-            showScreen(screen) {
-                elements.mainMenu.classList.add('visually-hidden');
-                elements.gameScreen.classList.add('visually-hidden');
-                
-                setTimeout(() => {
-                    elements.mainMenu.classList.add('hidden');
-                    elements.gameScreen.classList.add('hidden');
-                    screen.classList.remove('hidden');
-                    setTimeout(() => screen.classList.remove('visually-hidden'), 50);
-                }, 300);
-            },
+    // --- ОПРЕДЕЛЕНИЕ БЛОКОВ ---
+    const BLOCKS = {
+        classic: {
+            '1x1': { s: [[[1]]], c: 'var(--c1)' }, '1x2': { s: [[[1, 1]], [[1], [1]]], c: 'var(--c2)' },
+            '1x3': { s: [[[1, 1, 1]], [[1], [1], [1]]], c: 'var(--c3)' }, '1x4': { s: [[[1, 1, 1, 1]], [[1], [1], [1], [1]]], c: 'var(--c4)' },
+            '1x5': { s: [[[1, 1, 1, 1, 1]], [[1], [1], [1], [1], [1]]], c: 'var(--c5)' }, '2x2': { s: [[[1, 1], [1, 1]]], c: 'var(--c6)' },
+            '3x3': { s: [[[1, 1, 1], [1, 1, 1], [1, 1, 1]]], c: 'var(--c7)' }, 'L3':  { s: [[[1, 0], [1, 1]], [[1, 1], [1, 0]], [[1, 1], [0, 1]], [[0, 1], [1, 1]]], c: 'var(--c8)' },
+            'L5':  { s: [[[1,0,0],[1,0,0],[1,1,1]],[[1,1,1],[1,0,0],[1,0,0]],[[1,1,1],[0,0,1],[0,0,1]],[[0,0,1],[0,0,1],[1,1,1]],[[1,1,1,1],[1,0,0,0]],[[1,1,1,1],[0,0,0,1]],[[1,0],[1,0],[1,0],[1,1]],[[0,1],[0,1],[0,1],[1,1]]], c: 'var(--c9)' },
+        },
+        expanded: {
+            '2x3': { s: [[[1,1,1],[1,1,1]]], c: 'var(--c2)' }, 'T4': { s: [[[0,1,0],[1,1,1]], [[1,0],[1,1],[1,0]], [[1,1,1],[0,1,0]], [[0,1],[1,1],[0,1]]], c: 'var(--c5)' },
+            'Plus5': { s: [[[0,1,0],[1,1,1],[0,1,0]]], c: 'var(--c7)' }, 'C5': { s: [[[1,1],[1,0],[1,1]], [[1,1,1],[1,0,1]], [[1,1],[0,1],[1,1]], [[1,0,1],[1,1,1]]], c: 'var(--c3)' },
+            'S5': { s: [[[0,1,1],[1,1,0]], [[1,0],[1,1],[0,1]]], c: 'var(--c6)' }
+        }
+    };
+    const allExpandedBlocks = {...BLOCKS.classic, ...BLOCKS.expanded};
 
-            showModal(modalId) {
-                const modal = elements.modals[modalId.replace('-modal', '')];
-                if (modalId === 'stats-modal') {
-                    this.updateStats();
-                }
-                modal.classList.add('active');
-            },
+    // --- DOM Элементы ---
+    const gridEl = document.getElementById('game-grid');
+    const piecesContainer = document.getElementById('pieces-container');
+    const scoreDisplay = document.getElementById('score');
+    const highscoreDisplay = document.getElementById('highscore');
+    const floatingPieceContainer = document.getElementById('floating-piece-container');
+    
+    // --- Состояние игры ---
+    const GRID_SIZE = 8;
+    const DRAG_Y_OFFSET = 80;
+    let gameState = {
+        gridState: [], score: 0, currentPieces: [], gameMode: 'classic',
+        isPaused: false, isGameOver: false, stats: {}, reviveUsed: false,
+        timerId: null, timeRemaining: 100, bombCounter: 0, bombs: [],
+        gamesPlayedSinceAd: 0, vkUserId: null,
+        settings: { sfx: true, music: true }
+    };
+    let gridRect = null;
 
-            hideAllModals() {
-                Object.values(elements.modals).forEach(modal => modal.classList.remove('active'));
-            },
+    // --- Инициализация VK ---
+    async function initApp() {
+        vkBridge.send('VKWebAppInit');
+        
+        vkBridge.subscribe(e => {
+            if (e.detail.type === 'VKWebAppViewHide') audioManager.handleVisibilityChange(false);
+            if (e.detail.type === 'VKWebAppViewRestore') audioManager.handleVisibilityChange(true); // This will trigger the fix
+        });
 
-            updateStats() {
-                const stats = storage.getStats();
-                document.getElementById('stats-easy').textContent = stats.easy ? formatTime(stats.easy) : '--:--';
-                document.getElementById('stats-medium').textContent = stats.medium ? formatTime(stats.medium) : '--:--';
-                document.getElementById('stats-hard').textContent = stats.hard ? formatTime(stats.hard) : '--:--';
-                document.getElementById('stats-expert').textContent = stats.expert ? formatTime(stats.expert) : '--:--';
-            },
+        try {
+            const user = await vkBridge.send('VKWebAppGetUserInfo');
+            gameState.vkUserId = user.id;
+        } catch (error) {
+            console.warn('VK Bridge not available. Using localStorage.');
+            gameState.vkUserId = localStorage.getItem('blockPuzzleGuestId') || `guest_${Date.now()}`;
+            localStorage.setItem('blockPuzzleGuestId', gameState.vkUserId);
+        }
+        await loadData();
+        
+        // FIX 1: Попытка авто-запуска музыки при загрузке (как в "ВК Интеграция").
+        // Может не сработать (это нормально), тогда клик все исправит.
+        if (gameState.settings.music) {
+            audioManager.bgMusic.play().catch(e => { /* Autoplay failed, wait for click */ });
+        }
+        
+        showMainMenu();
+    }
+    
+    // --- Инициализация ---
+    async function init() {
+        setupEventListeners();
+        createGrid();
+        await initApp(); 
+    }
+    
+    function createGrid() {
+        gridEl.innerHTML = '';
+        for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('grid-cell');
+            gridEl.appendChild(cell);
+        }
+    }
 
-            setTheme(themeName) {
-                document.documentElement.setAttribute('data-theme', themeName);
-                storage.saveTheme(themeName);
-            },
+    // --- Управление игрой ---
+    function startGame(mode) {
+        audioManager.tap();
+        gameState = { ...gameState, gridState: Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(null)),
+            score: 0, isGameOver: false, isPaused: false, gameMode: mode, bombs: [], bombCounter: 0, reviveUsed: false };
+        scoreDisplay.textContent = '0';
+        highscoreDisplay.textContent = gameState.stats[mode] || 0;
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
+        const timeBarContainer = document.getElementById('time-bar-container');
+        if (mode === 'time') {
+            timeBarContainer.style.display = 'block';
+            startTimer();
+        } else {
+            timeBarContainer.style.display = 'none';
+            if (gameState.timerId) clearInterval(gameState.timerId);
+        }
+        clearAllCells();
+        generateNewPieces();
+        updatePiecesAvailability();
+        setTimeout(() => { gridRect = gridEl.getBoundingClientRect(); }, 100);
+        try { vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }); } catch(e) { console.error("Banner Ad Error:", e); }
+    }
+    
+    function confirmEndGame(reason = '') {
+        audioManager.gameOver();
+        gameState.isGameOver = true;
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        updateStats();
+        const titleEl = document.getElementById('game-over-title');
+        const reasonEl = document.getElementById('game-over-reason');
+        if (reason === 'no_moves') {
+            titleEl.textContent = 'Ходов не осталось!';
+            reasonEl.textContent = 'Не удалось разместить ни одну из фигур.';
+        } else {
+            titleEl.textContent = 'Игра окончена!';
+            reasonEl.textContent = '';
+        }
+        document.getElementById('final-score').textContent = gameState.score;
+        document.getElementById('game-over-modal').classList.add('active');
+        gameState.gamesPlayedSinceAd++;
+        if (gameState.gamesPlayedSinceAd >= 2) { 
+            vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
+                .then( (res) => { 
+                    gameState.gamesPlayedSinceAd = 0;
+                    // FIX 2: Removed manual audio refresh. VKWebAppViewRestore will handle it.
+                })
+                .catch(e => {
+                    console.error(e);
+                    // FIX 2: Removed manual audio refresh. VKWebAppViewRestore will handle it.
+                });
+        }
+    }
+
+    function handleGameOver(reason = '') {
+        if (gameState.isGameOver) return;
+        gameState.isGameOver = true;
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        if (!gameState.reviveUsed) {
+            document.getElementById('revive-modal').classList.add('active');
+        } else {
+            confirmEndGame(reason);
+        }
+    }
+
+    async function revive() {
+        audioManager.tap();
+        try {
+            const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' });
             
-            loadTheme() {
-                const savedTheme = storage.getTheme();
-                if (savedTheme) {
-                    this.setTheme(savedTheme);
-                }
-            }
-        };
+            // FIX 2: Removed manual audio refresh. VKWebAppViewRestore will handle it.
 
-        const storage = {
-            getStats() {
-                return JSON.parse(localStorage.getItem('numberRaceStats')) || {};
-            },
-            saveStats(difficulty, time) {
-                const stats = this.getStats();
-                if (!stats[difficulty] || time < stats[difficulty]) {
-                    stats[difficulty] = time;
-                    localStorage.setItem('numberRaceStats', JSON.stringify(stats));
-                }
-            },
-            saveTheme(themeName) {
-                localStorage.setItem('numberRaceTheme', themeName);
-            },
-            getTheme() {
-                return localStorage.getItem('numberRaceTheme');
-            }
-        };
-
-        const game = {
-            startGame(difficulty) {
-                state.difficulty = difficulty;
-                state.maxNumber = config.difficulties[difficulty].maxNumber;
-                this.reset();
-                ui.showScreen(elements.gameScreen);
-                
-                // Задержка для корректной отрисовки поля перед генерацией чисел
+            if (adResult.result) {
+                closeAllModals();
+                gameState.reviveUsed = true;
+                const indices = Array.from(Array(GRID_SIZE).keys());
+                const rowsToClear = indices.sort(() => 0.5 - Math.random()).slice(0, 3);
+                const colsToClear = indices.sort(() => 0.5 - Math.random()).slice(0, 3);
+                rowsToClear.forEach(r => { for(let c=0;c<GRID_SIZE;c++) getCell(r,c).classList.add('clearing'); });
+                colsToClear.forEach(c => { for(let r=0;r<GRID_SIZE;r++) getCell(r,c).classList.add('clearing'); });
                 setTimeout(() => {
-                    this.generateNumbers();
-                    this.startTimer();
+                    rowsToClear.forEach(r => { for (let c=0;c<GRID_SIZE;c++) clearCell(r,c); });
+                    colsToClear.forEach(c => { for (let r=0;r<GRID_SIZE;r++) clearCell(r,c); });
+                    gameState.isGameOver = false;
+                    if (gameState.gameMode === 'time') {
+                        gameState.timeRemaining = Math.max(gameState.timeRemaining, 50);
+                        runTimer();
+                    }
+                    postTurnLogic();
                 }, 400);
-            },
-
-            reset() {
-                state.currentNumber = 1;
-                state.paused = false;
-                elements.gameBoard.innerHTML = '';
-                elements.nextNumber.textContent = '1';
-                elements.timer.textContent = '00:00';
-                clearInterval(state.timerInterval);
-            },
-            
-            restartGame() {
-                ui.hideAllModals();
-                this.startGame(state.difficulty);
-            },
-            
-            quitGame() {
-                ui.hideAllModals();
-                ui.showScreen(elements.mainMenu);
-            },
-
-            generateNumbers() {
-                const boardWidth = elements.gameBoard.clientWidth;
-                const boardHeight = elements.gameBoard.clientHeight;
-                const positions = [];
-
-                for (let i = 1; i <= state.maxNumber; i++) {
-                    const cell = document.createElement('div');
-                    cell.textContent = i;
-                    cell.dataset.number = i;
-                    cell.classList.add('number-cell');
-
-                    const { size, x, y } = this.getSafePosition(boardWidth, boardHeight, positions);
-
-                    positions.push({ x, y, size });
-
-                    cell.style.width = `${size}px`;
-                    cell.style.height = `${size}px`;
-                    cell.style.left = `${x}px`;
-                    cell.style.top = `${y}px`;
-                    
-                    const randomFont = config.fonts[Math.floor(Math.random() * config.fonts.length)];
-                    const randomRotation = Math.random() * 90 - 45;
-                    const randomScale = 0.8 + Math.random() * 0.4;
-                    
-                    cell.style.fontFamily = randomFont;
-                    cell.style.fontSize = `${size * 0.6}px`;
-                    cell.style.transform = `rotate(${randomRotation}deg) scale(${randomScale})`;
-
-                    cell.addEventListener('click', this.handleNumberClick);
-                    elements.gameBoard.appendChild(cell);
-                }
-            },
-
-            getSafePosition(boardWidth, boardHeight, existingPositions) {
-                let size, x, y, isOverlapping;
-                const maxAttempts = 150; // Увеличено кол-во попыток
-                let attempt = 0;
-
-                do {
-                    isOverlapping = false;
-                    const scaleFactor = Math.min(boardWidth, boardHeight) / 400;
-                    
-                    let sizeModifier = 1.0;
-                    if (state.difficulty === 'hard') sizeModifier = 0.88;
-                    if (state.difficulty === 'expert') sizeModifier = 0.82;
-
-                    size = (Math.random() * 30 + 35) * scaleFactor * sizeModifier;
-                    x = Math.random() * (boardWidth - size);
-                    y = Math.random() * (boardHeight - size);
-
-                    for (const pos of existingPositions) {
-                        const dx = x - pos.x;
-                        const dy = y - pos.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        // Увеличиваем делитель, чтобы разрешить более плотное размещение
-                        if (distance < (size + pos.size) / 2.1) { 
-                            isOverlapping = true;
-                            break;
-                        }
-                    }
-                    attempt++;
-                } while (isOverlapping && attempt < maxAttempts);
-
-                return { size, x, y };
-            },
-
-            handleNumberClick(e) {
-                if (state.paused) return;
-
-                const clickedNumber = parseInt(e.target.dataset.number);
-                
-                if (navigator.vibrate) {
-                    navigator.vibrate(50);
-                }
-                
-                if (clickedNumber === state.currentNumber) {
-                    e.target.classList.add('found');
-                    state.currentNumber++;
-                    
-                    if (state.currentNumber > state.maxNumber) {
-                        this.win();
-                    } else {
-                        elements.nextNumber.textContent = state.currentNumber;
-                    }
-                }
-            },
-
-            startTimer() {
-                state.startTime = Date.now();
-                state.timerInterval = setInterval(() => {
-                    if (!state.paused) {
-                        const elapsedTime = (Date.now() - state.startTime) / 1000;
-                        elements.timer.textContent = formatTime(elapsedTime);
-                    }
-                }, 200);
-            },
-            
-            stopTimer() {
-                clearInterval(state.timerInterval);
-                return (Date.now() - state.startTime) / 1000;
-            },
-
-            pauseGame() {
-                state.paused = true;
-                clearInterval(state.timerInterval);
-                ui.showModal('pause');
-            },
-
-            resumeGame() {
-                ui.hideAllModals();
-                state.paused = false;
-                const currentTimeParts = elements.timer.textContent.split(':');
-                const currentTimeInSeconds = parseInt(currentTimeParts[0]) * 60 + parseInt(currentTimeParts[1]);
-                state.startTime = Date.now() - currentTimeInSeconds * 1000;
-                this.startTimer();
-            },
-            
-            win() {
-                const finalTime = this.stopTimer();
-                storage.saveStats(state.difficulty, finalTime);
-                
-                elements.winTime.textContent = formatTime(finalTime);
-                const bestTime = storage.getStats()[state.difficulty];
-                elements.bestTime.textContent = bestTime ? formatTime(bestTime) : '--:--';
-                
-                ui.showModal('win');
+            } else {
+                closeAllModals();
+                confirmEndGame();
             }
-        };
+        } catch (e) {
+            console.error('Rewarded Ad error:', e);
+            // FIX 2: Removed manual audio refresh. VKWebAppViewRestore will handle it.
+            closeAllModals(); 
+            confirmEndGame();
+        }
+    }
 
-        // Инициализация
-        window.onload = () => {
-            ui.loadTheme();
-            Object.values(elements.modals).forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        const wasPaused = state.paused;
-                        const isPauseModal = modal.id === 'pause-modal';
-                        ui.hideAllModals();
-                        if (wasPaused && isPauseModal) {
-                           game.resumeGame();
-                        }
+    function showMainMenu() {
+        document.getElementById('main-menu').style.display = 'flex';
+        document.getElementById('game-screen').style.display = 'none';
+        closeAllModals();
+        try { vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }); } catch(e) { console.error("Banner Ad Error:", e); }
+    }
+
+    function pauseGame(showModal = true) {
+        if (gameState.isGameOver) return;
+        audioManager.tap();
+        gameState.isPaused = true;
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        if (showModal) document.getElementById('pause-modal').classList.add('active');
+    }
+
+    function resumeGame() {
+        audioManager.tap();
+        gameState.isPaused = false;
+        if (gameState.gameMode === 'time') runTimer();
+        document.getElementById('pause-modal').classList.remove('active');
+    }
+    
+    function closeAllModals() {
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+    }
+
+    // --- Логика блоков ---
+    function generateNewPieces() {
+        piecesContainer.innerHTML = '';
+        gameState.currentPieces = [];
+        const pieceSet = (gameState.gameMode === 'expanded') ? allExpandedBlocks : BLOCKS.classic;
+        const pieceKeys = Object.keys(pieceSet);
+        const computedStyle = getComputedStyle(document.documentElement);
+        for (let i = 0; i < 3; i++) {
+            const randomKey = pieceKeys[Math.floor(Math.random() * pieceKeys.length)];
+            const pieceData = pieceSet[randomKey];
+            const randomShapeIndex = Math.floor(Math.random() * pieceData.s.length);
+            const shape = pieceData.s[randomShapeIndex];
+            const pieceId = `p${Date.now()}${i}`;
+            const colorVar = pieceData.c;
+            const actualColor = computedStyle.getPropertyValue(colorVar.match(/--[a-zA-Z0-9-]+/)[0]).trim();
+            const pieceInfo = {
+                id: pieceId, shape: shape, color: actualColor,
+                element: createPieceElement(shape, actualColor, pieceId),
+                size: shape.flat().reduce((a, b) => a + b, 0)
+            };
+            gameState.currentPieces.push(pieceInfo);
+            piecesContainer.appendChild(pieceInfo.element);
+        }
+    }
+
+    function createPieceElement(shape, color, id) {
+        const pieceElement = document.createElement('div');
+        pieceElement.classList.add('piece');
+        pieceElement.id = id;
+        const rows = shape.length;
+        const cols = shape[0].length;
+        pieceElement.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        pieceElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        const blockStyle = getBlockStyle(color);
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cell = document.createElement('div');
+                cell.classList.add('piece-cell');
+                if (shape[r][c] === 1) {
+                    cell.classList.add('filled');
+                    cell.style.cssText = blockStyle;
+                }
+                pieceElement.appendChild(cell);
+            }
+        }
+        return pieceElement;
+    }
+
+    // --- Drag & Drop ---
+    let draggedPieceInfo = null;
+    let floatingPiece = null;
+    function getCoordsFromEvent(e) { return e.touches ? e.touches[0] : e; }
+
+    function onDragStart(e) {
+        if (draggedPieceInfo || (e.type === 'mousedown' && e.button !== 0)) return;
+        const pieceEl = e.target.closest('.piece');
+        if (!pieceEl || pieceEl.classList.contains('disabled')) return;
+        
+        e.preventDefault();
+        draggedPieceInfo = gameState.currentPieces.find(p => p.id === pieceEl.id);
+        if (!draggedPieceInfo) {
+            console.error("Could not find piece data for element:", pieceEl.id);
+            return;
+        }
+        
+        floatingPiece = draggedPieceInfo.element.cloneNode(true);
+        floatingPieceContainer.appendChild(floatingPiece);
+        
+        onDragMove(e);
+        
+        draggedPieceInfo.element.style.opacity = '0.3';
+        document.body.classList.add('dragging');
+        
+        if (e.type === 'mousedown') {
+            window.addEventListener('mousemove', onDragMove);
+            window.addEventListener('mouseup', onDragEnd, { once: true }); 
+        } else {
+            window.addEventListener('touchmove', onDragMove, { passive: false });
+            window.addEventListener('touchend', onDragEnd, { once: true });
+        }
+    }
+
+    function onDragMove(e) {
+        if (!draggedPieceInfo) return;
+        e.preventDefault();
+        
+        const coords = getCoordsFromEvent(e);
+        
+        const containerX = coords.clientX;
+        const containerY = coords.clientY - DRAG_Y_OFFSET;
+        floatingPieceContainer.style.transform = `translate(${containerX}px, ${containerY}px)`;
+
+        const pieceRect = floatingPiece.getBoundingClientRect();
+        const pieceX = -pieceRect.width / 2;
+        const pieceY = -pieceRect.height / 2;
+        floatingPiece.style.transform = `translate(${pieceX}px, ${pieceY}px) scale(1.5)`;
+
+        const { row, col } = getGridCoordsFromScreen(containerX, containerY);
+        drawPreview(row, col, draggedPieceInfo.shape);
+    }
+
+    function onDragEnd(e) {
+        window.removeEventListener('mousemove', onDragMove);
+        window.removeEventListener('touchmove', onDragMove);
+        document.body.classList.remove('dragging');
+
+        if (!draggedPieceInfo) return;
+        try {
+            const coords = e.changedTouches ? e.changedTouches[0] : e;
+            const finalContainerY = coords.clientY - DRAG_Y_OFFSET;
+            const { row, col } = getGridCoordsFromScreen(coords.clientX, finalContainerY);
+            placePiece(row, col, draggedPieceInfo);
+        } finally {
+            if (floatingPiece) floatingPieceContainer.innerHTML = '';
+            floatingPiece = null;
+            const originalPiece = gameState.currentPieces.find(p => p && p.id === draggedPieceInfo.id);
+            if (originalPiece) originalPiece.element.style.opacity = '1';
+            clearPreview();
+            draggedPieceInfo = null;
+        }
+    }
+
+    function getGridCoordsFromScreen(screenX, screenY) {
+        if (!gridRect) return { row: -1, col: -1 };
+        if (screenX < gridRect.left || screenX > gridRect.right || screenY < gridRect.top || screenY > gridRect.bottom) {
+            return { row: -1, col: -1 };
+        }
+        const x = screenX - gridRect.left;
+        const y = screenY - gridRect.top;
+        const col = Math.floor(x / (gridRect.width / GRID_SIZE));
+        const row = Math.floor(y / (gridRect.height / GRID_SIZE));
+        return { row, col };
+    }
+
+    function drawPreview(centerRow, centerCol, shape) {
+        clearPreview();
+        const startRow = centerRow - Math.floor(shape.length / 2);
+        const startCol = centerCol - Math.floor(shape[0].length / 2);
+
+        if (canPlace(startRow, startCol, shape)) {
+            shape.forEach((row, r) => {
+                row.forEach((cell, c) => {
+                    if (cell) {
+                        const gridCell = getCell(startRow + r, startCol + c);
+                        if (gridCell) gridCell.classList.add('preview');
                     }
                 });
             });
-        };
-    </script>
+        }
+    }
+    
+    function clearPreview() {
+        document.querySelectorAll('.grid-cell.preview').forEach(cell => cell.classList.remove('preview'));
+    }
+
+    // --- Логика игры ---
+    function canPlace(startRow, startCol, shape) {
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[0].length; c++) {
+                if (shape[r][c]) {
+                    const boardRow = startRow + r;
+                    const boardCol = startCol + c;
+                    if (boardRow >= GRID_SIZE || boardCol >= GRID_SIZE || boardRow < 0 || boardCol < 0 || gameState.gridState[boardRow][boardCol]) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    
+    function placePiece(centerRow, centerCol, piece) {
+        const startRow = centerRow - Math.floor(piece.shape.length / 2);
+        const startCol = centerCol - Math.floor(piece.shape[0].length / 2);
+
+        if (!canPlace(startRow, startCol, piece.shape)) return;
+        
+        audioManager.place();
+        const blockStyle = getBlockStyle(piece.color);
+        piece.shape.forEach((row, r) => {
+            row.forEach((cell, c) => {
+                if (cell) {
+                    const boardRow = startRow + r;
+                    const boardCol = startCol + c;
+                    gameState.gridState[boardRow][boardCol] = { color: piece.color };
+                    const gridCell = getCell(boardRow, boardCol);
+                    gridCell.style.cssText = blockStyle;
+                    gridCell.classList.add('filled-cell');
+                }
+            });
+        });
+        updateScore(piece.size);
+        piece.element.remove();
+        gameState.currentPieces = gameState.currentPieces.filter(p => p.id !== piece.id);
+        checkLineClears();
+    }
+
+    function postTurnLogic() {
+        if (gameState.isGameOver) return;
+        if (gameState.gameMode === 'bomb') processBombTimers();
+        if (gameState.currentPieces.length === 0) generateNewPieces();
+        updatePiecesAvailability();
+        checkGameOver();
+    }
+    
+    function checkLineClears() {
+        let rowsToClear = [], colsToClear = [];
+        for (let r = 0; r < GRID_SIZE; r++) if (gameState.gridState[r].every(c => c)) rowsToClear.push(r);
+        for (let c = 0; c < GRID_SIZE; c++) if (gameState.gridState.every(r => r[c])) colsToClear.push(c);
+        const linesCleared = rowsToClear.length + colsToClear.length;
+        if (linesCleared > 0) {
+            audioManager.clear();
+            gameState.bombs = gameState.bombs.filter(b => !rowsToClear.includes(b.row) && !colsToClear.includes(b.col));
+            rowsToClear.forEach(r => { for(let c=0;c<GRID_SIZE;c++) getCell(r,c).classList.add('clearing'); });
+            colsToClear.forEach(c => { for(let r=0;r<GRID_SIZE;r++) getCell(r,c).classList.add('clearing'); });
+            updateScore(10 * linesCleared * linesCleared);
+            if (gameState.gameMode === 'time') { gameState.timeRemaining = Math.min(100, gameState.timeRemaining + linesCleared * 5); document.getElementById('time-bar').style.width = gameState.timeRemaining + '%'; }
+            setTimeout(() => {
+                rowsToClear.forEach(r => { for (let c=0;c<GRID_SIZE;c++) clearCell(r,c); });
+                colsToClear.forEach(c => { for (let r=0;r<GRID_SIZE;r++) clearCell(r,c); });
+                postTurnLogic();
+            }, 400);
+        } else { postTurnLogic(); }
+    }
+
+    function checkGameOver() {
+        if (gameState.isGameOver) return;
+        const canMove = gameState.currentPieces.some(p => !p.element.classList.contains('disabled'));
+        if (!canMove) setTimeout(() => handleGameOver('no_moves'), 500);
+    }
+    
+    function updatePiecesAvailability() {
+        gameState.currentPieces.forEach(piece => {
+            let canBePlaced = false;
+            for (let r = -piece.shape.length; r < GRID_SIZE; r++) {
+                for (let c = -piece.shape[0].length; c < GRID_SIZE; c++) {
+                    if (canPlace(r, c, piece.shape)) { canBePlaced = true; break; }
+                }
+                if (canBePlaced) break;
+            }
+            piece.element.classList.toggle('disabled', !canBePlaced);
+        });
+    }
+
+    // --- Логика режимов ---
+    function processBombTimers() {
+        let bombExploded = false;
+        gameState.bombs.forEach(b => { 
+            if (b.timer > 0) { b.timer--; if (b.timer === 0) bombExploded = true; }
+        });
+        updateBombTimers();
+        if (bombExploded) { handleGameOver(); return; }
+        // FIX 3: Spawn bombs faster (every 5 turns) and cap at 3
+        if (gameState.bombs.length < 3 && ++gameState.bombCounter % 5 === 0) addBomb();
+    }
+    function addBomb() {
+        const emptyCells = [];
+        for (let r=0;r<GRID_SIZE;r++) for (let c=0;c<GRID_SIZE;c++) if (!gameState.gridState[r][c]) emptyCells.push({r,c});
+        if (emptyCells.length > 0) {
+            const {r, c} = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            const newBomb = { row: r, col: c, timer: 10 };
+            gameState.bombs.push(newBomb);
+            gameState.gridState[r][c] = { type: 'bomb', timer: 10 };
+            const cell = getCell(r, c);
+            cell.classList.add('bomb-cell');
+            cell.innerHTML = `<span class="bomb-timer">10</span>`;
+        }
+    }
+    function updateBombTimers() {
+        gameState.bombs.forEach(b => {
+            const cell = getCell(b.row, b.col);
+            if(cell && cell.querySelector('.bomb-timer')) {
+                cell.querySelector('.bomb-timer').textContent = b.timer;
+            }
+        });
+    }
+    function startTimer() {
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        gameState.timeRemaining = 100;
+        document.getElementById('time-bar').style.width = '100%';
+        runTimer();
+    }
+    function runTimer() {
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        gameState.timerId = setInterval(() => {
+            if (gameState.isPaused || gameState.isGameOver) { clearInterval(gameState.timerId); return; }
+            gameState.timeRemaining -= 0.1;
+            document.getElementById('time-bar').style.width = gameState.timeRemaining + '%';
+            if (gameState.timeRemaining <= 0) { clearInterval(gameState.timerId); handleGameOver('time_out'); }
+        }, 100);
+    }
+    
+    // --- Вспомогательные функции ---
+    function updateScore(points) { gameState.score += points; scoreDisplay.textContent = gameState.score; }
+    function getCell(row, col) { if (row<0||row>=GRID_SIZE||col<0||col>=GRID_SIZE) return null; return gridEl.children[row*GRID_SIZE+col]; }
+    function clearCell(row, col) {
+        const cell = getCell(row, col);
+        if (cell) {
+            cell.style.cssText = '';
+            cell.className = 'grid-cell';
+            cell.innerHTML = '';
+        }
+        gameState.gridState[row][col] = null;
+    }
+    function clearAllCells() { for(let r=0;r<GRID_SIZE;r++) for(let c=0;c<GRID_SIZE;c++) clearCell(r,c); }
+
+    // --- Хранилище и UI ---
+    async function loadData() {
+        const storageKey = `blockManiaData_${gameState.vkUserId}`;
+        let data = null;
+        try {
+            const response = await vkBridge.send('VKWebAppStorageGet', { keys: [storageKey] });
+            if (response.keys[0]?.value) data = response.keys[0].value;
+        } catch (error) { data = localStorage.getItem(storageKey); }
+        const parsedData = data ? JSON.parse(data) : {};
+        gameState.stats = parsedData.stats || { classic: 0, time: 0, bomb: 0, expanded: 0 };
+        gameState.settings = parsedData.settings || { sfx: true, music: true };
+        
+        audioManager.settings.sfx = gameState.settings.sfx;
+        audioManager.settings.music = gameState.settings.music;
+        
+        document.getElementById('sound-toggle').checked = gameState.settings.sfx;
+        document.getElementById('music-toggle').checked = gameState.settings.music;
+    }
+    async function saveData() {
+        const storageKey = `blockManiaData_${gameState.vkUserId}`;
+        const dataToSave = JSON.stringify({ stats: gameState.stats, settings: gameState.settings });
+        try {
+            await vkBridge.send('VKWebAppStorageSet', { key: storageKey, value: dataToSave });
+        } catch (error) { localStorage.setItem(storageKey, dataToSave); }
+    }
+    async function updateStats() {
+        const { gameMode, score, stats } = gameState;
+        if (score > (stats[gameMode] || 0)) {
+            stats[gameMode] = score;
+            highscoreDisplay.textContent = score;
+            await saveData();
+        }
+    }
+    function displayStats() {
+        audioManager.tap();
+        const content = document.getElementById('stats-content');
+        content.innerHTML = '<h2 class="modal-title">Статистика</h2>';
+        const modes = { classic: 'Классика', time: 'Гонка на время', bomb: 'Минное поле', expanded: 'Эксперт' };
+        for (const mode in modes) {
+            const score = gameState.stats[mode] || 0;
+            content.innerHTML += `<div class="settings-row"><span>${modes[mode]}</span><strong>${score}</strong></div>`;
+        }
+        content.innerHTML += '<button class="btn btn-primary" data-action="close">Закрыть</button>';
+        document.getElementById('stats-modal').classList.add('active');
+    }
+    function displayRules() {
+        audioManager.tap();
+        const content = document.getElementById('rules-content');
+        content.innerHTML = `
+            <h2 class="modal-title">Правила</h2>
+            <p style="text-align:left; line-height: 1.5;">
+                <strong>Классика:</strong> Размещайте фигуры, чтобы заполнять и очищать линии.<br><br>
+                <strong>Гонка на время:</strong> То же, но со шкалой времени, которая пополняется за очищенные линии.<br><br>
+                <strong>Минное поле:</strong> На поле появляются бомбы. Очистите линию с бомбой, пока не истек ее таймер.<br><br>
+                <strong>Эксперт:</strong> Классический режим с более сложными и редкими фигурами.
+            </p>
+            <button class="btn btn-primary" data-action="close">Понятно</button>
+        `;
+        document.getElementById('rules-modal').classList.add('active');
+    }
+
+    // --- Обработчики событий ---
+    function setupEventListeners() {
+        // *** FIX 1 ***
+        // Теперь клик только "разблокирует" Tone.js, если он еще не готов.
+        document.body.addEventListener('click', async () => {
+            if (!audioManager.isReady) {
+                await audioManager.init(); // init() уже содержит updateMusicState()
+            }
+        }, { once: true });
+
+        document.getElementById('rules-btn').addEventListener('click', displayRules);
+        document.getElementById('stats-btn').addEventListener('click', displayStats);
+        document.getElementById('settings-btn').addEventListener('click', () => { audioManager.tap(); document.getElementById('settings-modal').classList.add('active'); });
+        document.getElementById('pause-btn').addEventListener('click', () => pauseGame());
+        
+        document.getElementById('sound-toggle').addEventListener('change', (e) => {
+            gameState.settings.sfx = e.target.checked;
+            audioManager.settings.sfx = e.target.checked;
+            saveData();
+            audioManager.tap();
+        });
+        document.getElementById('music-toggle').addEventListener('change', (e) => {
+            gameState.settings.music = e.target.checked;
+            audioManager.settings.music = e.target.checked;
+            saveData();
+            audioManager.updateMusicState();
+        });
+
+        document.body.addEventListener('click', (e) => {
+            const modeTarget = e.target.closest('[data-mode]');
+            if (modeTarget) { startGame(modeTarget.dataset.mode); return; }
+            const actionTarget = e.target.closest('[data-action]');
+            if (actionTarget) {
+                const action = actionTarget.dataset.action;
+                if (action === 'close') { audioManager.tap(); closeAllModals(); }
+                if (action === 'resume') resumeGame();
+                if (action === 'quit') { audioManager.tap(); showMainMenu(); }
+                if (action === 'restart') { audioManager.tap(); closeAllModals(); startGame(gameState.gameMode); }
+                if (action === 'revive') revive();
+                if (action === 'end-game-confirm') { audioManager.tap(); closeAllModals(); confirmEndGame('no_moves'); }
+            }
+        });
+
+        piecesContainer.addEventListener('mousedown', onDragStart);
+        piecesContainer.addEventListener('touchstart', onDragStart, { passive: false });
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        window.addEventListener('resize', () => { if (!gameState.isGameOver && !gameState.isPaused) gridRect = gridEl.getBoundingClientRect(); });
+    }
+    
+    init();
+});
+</script>
+
 </body>
 </html>
-
 
