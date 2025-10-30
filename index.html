@@ -433,7 +433,7 @@
 
         <!-- ГЛАВНОЕ МЕНЮ -->
         <div id="main-menu">
-            <h1 class="game-title">Тетрис Мания</h1>
+            <h1 class="game-title">Блок Мания</h1>
             <div class="main-menu-buttons">
                 <button class="btn" data-mode="classic">Классика</button>
                 <button class="btn" data-mode="time">Гонка на время</button>
@@ -901,10 +901,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         // --- FIX: Wrap in try/catch to prevent state-lock on error ---
         try {
             if (draggedPieceInfo || (e.type === 'mousedown' && e.button !== 0)) return;
-            const pieceEl = e.target.closest('.piece');
-            if (!pieceEl || pieceEl.classList.contains('disabled')) return;
             
             e.preventDefault();
+
+            // --- IMPROVED GRAB LOGIC ---
+            let pieceEl = e.target.closest('.piece');
+            const coords = getCoordsFromEvent(e);
+
+            if (!pieceEl) {
+                // User tapped the background, let's find the closest piece.
+                let minDistance = Infinity;
+                let closestPiece = null;
+                // Max pixels to "snap" to a piece. 70px is a generous tap area.
+                const MAX_GRAB_DISTANCE = 70; 
+
+                for (const piece of gameState.currentPieces) {
+                    if (piece.element.classList.contains('disabled')) continue;
+
+                    const rect = piece.element.getBoundingClientRect();
+                    const pieceCenterX = rect.left + rect.width / 2;
+                    const pieceCenterY = rect.top + rect.height / 2;
+
+                    // Calculate distance from tap to piece center
+                    const distance = Math.sqrt(
+                        Math.pow(coords.clientX - pieceCenterX, 2) +
+                        Math.pow(coords.clientY - pieceCenterY, 2)
+                    );
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestPiece = piece;
+                    }
+                }
+
+                // If we found a piece within the grab distance, select it.
+                if (closestPiece && minDistance < MAX_GRAB_DISTANCE) {
+                    pieceEl = closestPiece.element;
+                }
+            }
+            // --- END OF IMPROVED GRAB LOGIC ---
+            
+            if (!pieceEl || pieceEl.classList.contains('disabled')) {
+                // If no piece was tapped directly or found nearby, abort.
+                return;
+            }
             
             draggedPieceInfo = gameState.currentPieces.find(p => p.id === pieceEl.id);
             if (!draggedPieceInfo) {
@@ -1304,6 +1344,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 </body>
 </html>
+
 
 
 
