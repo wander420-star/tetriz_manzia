@@ -321,6 +321,7 @@
             cursor: grab;
             transition: transform 0.2s, opacity 0.2s;
             touch-action: none;
+            padding: 5px; /* FIX: Increases the grabbable area */
         }
         .piece-cell {
             width: 18px;
@@ -891,34 +892,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Drag & Drop ---
     let draggedPieceInfo = null;
     let floatingPiece = null;
+    let lastPreviewTime = 0;
+    const PREVIEW_THROTTLE = 50; // ms, for preview throttling
+    
     function getCoordsFromEvent(e) { return e.touches ? e.touches[0] : e; }
 
     function onDragStart(e) {
-        if (draggedPieceInfo || (e.type === 'mousedown' && e.button !== 0)) return;
-        const pieceEl = e.target.closest('.piece');
-        if (!pieceEl || pieceEl.classList.contains('disabled')) return;
-        
-        e.preventDefault();
-        draggedPieceInfo = gameState.currentPieces.find(p => p.id === pieceEl.id);
-        if (!draggedPieceInfo) {
-            console.error("Could not find piece data for element:", pieceEl.id);
-            return;
-        }
-        
-        floatingPiece = draggedPieceInfo.element.cloneNode(true);
-        floatingPieceContainer.appendChild(floatingPiece);
-        
-        onDragMove(e);
-        
-        draggedPieceInfo.element.style.opacity = '0.3';
-        document.body.classList.add('dragging');
-        
-        if (e.type === 'mousedown') {
-            window.addEventListener('mousemove', onDragMove);
-            window.addEventListener('mouseup', onDragEnd, { once: true }); 
-        } else {
-            window.addEventListener('touchmove', onDragMove, { passive: false });
-            window.addEventListener('touchend', onDragEnd, { once: true });
+        // --- FIX: Wrap in try/catch to prevent state-lock on error ---
+        try {
+            if (draggedPieceInfo || (e.type === 'mousedown' && e.button !== 0)) return;
+            const pieceEl = e.target.closest('.piece');
+            if (!pieceEl || pieceEl.classList.contains('disabled')) return;
+            
+            e.preventDefault();
+            
+            draggedPieceInfo = gameState.currentPieces.find(p => p.id === pieceEl.id);
+            if (!draggedPieceInfo) {
+                console.error("Could not find piece data for element:", pieceEl.id);
+                draggedPieceInfo = null; // Reset state
+                return;
+            }
+            
+            floatingPiece = draggedPieceInfo.element.cloneNode(true);
+            floatingPieceContainer.appendChild(floatingPiece);
+            
+            // --- OPTIMIZATION: Set piece transform ONCE, right here ---
+            const pieceRect = floatingPiece.getBoundingClientRect();
+            const pieceX = -pieceRect.width / 2;
+            const pieceY = -pieceRect.height / 2;
+            floatingPiece.style.transform = `translate(${pieceX}px, ${pieceY}px) scale(1.5)`;
+            lastPreviewTime = 0; // Reset throttle timer
+            
+            onDragMove(e); // Run once for initial position
+            
+            draggedPieceInfo.element.style.opacity = '0.3';
+            document.body.classList.add('dragging');
+            
+            if (e.type === 'mousedown') {
+                window.addEventListener('mousemove', onDragMove);
+                window.addEventListener('mouseup', onDragEnd, { once: true }); 
+            } else {
+                window.addEventListener('touchmove', onDragMove, { passive: false });
+                window.addEventListener('touchend', onDragEnd, { once: true });
+            }
+        } catch (error) {
+            console.error("Error during onDragStart:", error);
+            // CRITICAL: Reset state to allow future grabs
+            if (floatingPiece) floatingPieceContainer.innerHTML = '';
+            floatingPiece = null;
+            if (draggedPieceInfo && draggedPieceInfo.element) {
+                 // Try to restore opacity if element exists
+                 const originalPiece = gameState.currentPieces.find(p => p && p.id === draggedPieceInfo.id);
+                 if (originalPiece) originalPiece.element.style.opacity = '1';
+            }
+            draggedPieceInfo = null;
+            document.body.classList.remove('dragging');
+            // Manually remove listeners just in case
+            window.removeEventListener('mousemove', onDragMove);
+            window.removeEventListener('mouseup', onDragEnd);
+            window.removeEventListener('touchmove', onDragMove);
+            window.removeEventListener('touchend', onDragEnd);
         }
     }
 
@@ -930,15 +963,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const containerX = coords.clientX;
         const containerY = coords.clientY - DRAG_Y_OFFSET;
+
+        // --- FAST PART: This moves the piece instantly with the finger ---
         floatingPieceContainer.style.transform = `translate(${containerX}px, ${containerY}px)`;
 
-        const pieceRect = floatingPiece.getBoundingClientRect();
-        const pieceX = -pieceRect.width / 2;
-        const pieceY = -pieceRect.height / 2;
-        floatingPiece.style.transform = `translate(${pieceX}px, ${pieceY}px) scale(1.5)`;
+        // --- THROTTLED SLOW PART: This calculates the preview ---
+        const now = Date.now();
+        if (now - lastPreviewTime > PREVIEW_THROTTLE) {
+            lastPreviewTime = now;
+            
+            // This part was moved to onDragStart, so it's not calculated 60x/sec anymore
+            // const pieceRect = floatingPiece.getBoundingClientRect();
+            // const pieceX = -pieceRect.width / 2;
+            // const pieceY = -pieceRect.height / 2;
+            // floatingPiece.style.transform = `translate(${pieceX}px, ${pieceY}px) scale(1.5)`;
 
-        const { row, col } = getGridCoordsFromScreen(containerX, containerY);
-        drawPreview(row, col, draggedPieceInfo.shape);
+            const { row, col } = getGridCoordsFromScreen(containerX, containerY);
+            drawPreview(row, col, draggedPieceInfo.shape);
+        }
     }
 
     function onDragEnd(e) {
@@ -1262,5 +1304,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 </body>
 </html>
+
+
+
 
 
